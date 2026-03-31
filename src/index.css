@@ -1,97 +1,59 @@
 @import "tailwindcss";
-@plugin "daisyui" {
-  themes: renovation;
-}
+@plugin "daisyui";
 
 @plugin "daisyui/theme" {
-  name: "renovation";
+  name: "quontly";
   default: true;
 
-  --color-base-100: #f8fafc;
-  --color-base-200: #f1f5f9;
-  --color-base-300: #dbe3ee;
-  --color-base-content: #1e293b;
+  --color-base-100: #101722;
+  --color-base-200: #152033;
+  --color-base-300: #213049;
+  --color-base-content: #ebf1fb;
 
-  --color-primary: #ea580c;
-  --color-primary-content: #ffffff;
+  --color-primary: #ff7a45;
+  --color-primary-content: #1c0c06;
 
-  --color-secondary: #0d9488;
-  --color-secondary-content: #ffffff;
+  --color-secondary: #34b4a8;
+  --color-secondary-content: #041412;
 
-  --color-accent: #f59e0b;
-  --color-accent-content: #1c1917;
+  --color-accent: #f0b53f;
+  --color-accent-content: #1c1200;
 
-  --color-neutral: #334155;
-  --color-neutral-content: #f8fafc;
+  --color-neutral: #0f1520;
+  --color-neutral-content: #e9f1ff;
 
-  --color-info: #0ea5e9;
-  --color-success: #16a34a;
-  --color-warning: #f59e0b;
-  --color-error: #dc2626;
+  --color-info: #4a9eff;
+  --color-success: #31bf83;
+  --color-warning: #d5a344;
+  --color-error: #f06161;
 
-  --radius-selector: 0.2rem;
-  --radius-field: 0.22rem;
-  --radius-box: 0.24rem;
-
-  --rounded-box: 0.24rem;
-  --rounded-btn: 0.2rem;
-  --tab-radius: 0.2rem;
+  --radius-box: 1rem;
+  --radius-field: 0.75rem;
+  --radius-selector: 0.75rem;
 }
 
-@layer base {
-  :root {
-    color: #1e293b;
-    background-color: #f8fafc;
-    font-family: 'DM Sans', 'Segoe UI', sans-serif;
-    font-synthesis: none;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
-  html {
-    scroll-behavior: smooth;
-  }
-
-  body {
-    margin: 0;
-    min-width: 320px;
-    background:
-      radial-gradient(circle at top left, rgba(234, 88, 12, 0.08), transparent 28%),
-      linear-gradient(180deg, #f8fafc 0%, #f4f9ff 100%);
-  }
-
-  #root {
-    min-height: 100vh;
-  }
-
-  h1,
-  h2,
-  h3,
-  h4 {
-    font-family: 'DM Sans', 'Segoe UI', sans-serif;
-  }
-
-  .font-mono {
-    font-family: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  }
+:root {
+  color: #ebf1fb;
+  background-color: #0b111b;
+  font-family: "Sora", "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@layer components {
-  .card,
-  .btn,
-  .badge,
-  .select,
-  .input,
-  .alert,
-  .collapse {
-    border-radius: 0.2rem;
-  }
-
-  .card-body p,
-  .card-body h2,
-  .card-body h3 {
-    overflow-wrap: anywhere;
-    word-break: normal;
-  }
+html {
+  scroll-behavior: smooth;
 }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #0b111b;
+}
+
+a {
+  text-decoration: none;
+}
+

@@ -59,7 +59,7 @@ export const affiliateCards: AffiliateCardContent[] = [
     href: 'https://www.homeadvisor.com/',
     disclosureTag: 'Affiliate Link',
   },
-  {
+  /**{
     title: 'Amazon DIY Essentials',
     badge: 'Budget-friendly picks',
     description:
@@ -72,7 +72,7 @@ export const affiliateCards: AffiliateCardContent[] = [
     ctaLabel: 'Browse DIY tools',
     href: 'https://affiliate-program.amazon.com/',
     disclosureTag: 'Affiliate Link',
-  },
+  },**/
 ]
 
 export const explainerSections: ContentSection[] = [

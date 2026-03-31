@@ -11,10 +11,20 @@ export interface BreakdownWeight {
   weight: number
 }
 
+export type ScopeType = 'localized' | 'room_wide' | 'whole_home'
+
 export interface ProjectDefinition {
   label: string
   roi: string
   summary: string
+  scopeType: ScopeType
+  effectiveSqftRatio?: number
+  effectiveSqftMin?: number
+  effectiveSqftMax?: number
+  referenceSqft: number
+  sizeMultiplierMin: number
+  sizeMultiplierMax: number
+  sizeElasticity: number
   breakdownWeights: BreakdownWeight[]
   tiers: Record<Tier, ProjectTierEstimate>
 }
@@ -32,6 +42,11 @@ export const rooms: Record<string, RoomDefinition> = {
         label: 'Full remodel',
         roi: 'Typical resale recapture: 55% to 70%',
         summary: 'Layout, cabinetry, countertops, flooring, and fixtures.',
+        scopeType: 'room_wide',
+        referenceSqft: 180,
+        sizeMultiplierMin: 0.9,
+        sizeMultiplierMax: 1.28,
+        sizeElasticity: 0.18,
         breakdownWeights: [
           { label: 'Labor', weight: 0.38 },
           { label: 'Cabinets', weight: 0.24 },
@@ -40,16 +55,24 @@ export const rooms: Record<string, RoomDefinition> = {
           { label: 'Permits and misc', weight: 0.09 },
         ],
         tiers: {
-          budget: { low: 10000, high: 20000, perSqft: 50 },
-          midrange: { low: 18000, high: 35000, perSqft: 90 },
-          premium: { low: 35000, high: 65000, perSqft: 175 },
-          luxury: { low: 65000, high: 150000, perSqft: 400 },
+          budget: { low: 12000, high: 28000, perSqft: 78 },
+          midrange: { low: 22000, high: 45000, perSqft: 150 },
+          premium: { low: 45000, high: 75000, perSqft: 240 },
+          luxury: { low: 75000, high: 140000, perSqft: 360 },
         },
       },
       cabinet_refacing: {
         label: 'Cabinet refacing',
         roi: 'Typical resale recapture: 65% to 80%',
         summary: 'Refresh cabinet fronts and hardware without full replacement.',
+        scopeType: 'localized',
+        effectiveSqftRatio: 0.45,
+        effectiveSqftMin: 45,
+        effectiveSqftMax: 140,
+        referenceSqft: 90,
+        sizeMultiplierMin: 0.88,
+        sizeMultiplierMax: 1.18,
+        sizeElasticity: 0.16,
         breakdownWeights: [
           { label: 'Labor', weight: 0.4 },
           { label: 'Materials', weight: 0.36 },
@@ -57,26 +80,34 @@ export const rooms: Record<string, RoomDefinition> = {
           { label: 'Misc', weight: 0.1 },
         ],
         tiers: {
-          budget: { low: 3500, high: 7000, perSqft: 20 },
-          midrange: { low: 7000, high: 13000, perSqft: 35 },
-          premium: { low: 13000, high: 22000, perSqft: 60 },
-          luxury: { low: 22000, high: 35000, perSqft: 95 },
+          budget: { low: 4000, high: 7500, perSqft: 28 },
+          midrange: { low: 7500, high: 13500, perSqft: 45 },
+          premium: { low: 13500, high: 22000, perSqft: 68 },
+          luxury: { low: 22000, high: 32000, perSqft: 96 },
         },
       },
       countertops_only: {
         label: 'Countertops only',
         roi: 'Typical resale recapture: 60% to 75%',
         summary: 'Countertop replacement and edge/finish upgrades.',
+        scopeType: 'localized',
+        effectiveSqftRatio: 0.2,
+        effectiveSqftMin: 18,
+        effectiveSqftMax: 65,
+        referenceSqft: 32,
+        sizeMultiplierMin: 0.9,
+        sizeMultiplierMax: 1.15,
+        sizeElasticity: 0.12,
         breakdownWeights: [
           { label: 'Fabrication', weight: 0.42 },
           { label: 'Materials', weight: 0.44 },
           { label: 'Labor', weight: 0.14 },
         ],
         tiers: {
-          budget: { low: 2500, high: 5000, perSqft: 15 },
-          midrange: { low: 5000, high: 9500, perSqft: 28 },
-          premium: { low: 9500, high: 17000, perSqft: 48 },
-          luxury: { low: 17000, high: 30000, perSqft: 86 },
+          budget: { low: 1800, high: 4500, perSqft: 20 },
+          midrange: { low: 4500, high: 8000, perSqft: 35 },
+          premium: { low: 8000, high: 14000, perSqft: 58 },
+          luxury: { low: 14000, high: 24000, perSqft: 90 },
         },
       },
     },
@@ -88,6 +119,11 @@ export const rooms: Record<string, RoomDefinition> = {
         label: 'Full remodel',
         roi: 'Typical resale recapture: 55% to 70%',
         summary: 'Shower/tub, vanity, tile, fixtures, and ventilation updates.',
+        scopeType: 'room_wide',
+        referenceSqft: 80,
+        sizeMultiplierMin: 0.92,
+        sizeMultiplierMax: 1.25,
+        sizeElasticity: 0.16,
         breakdownWeights: [
           { label: 'Labor', weight: 0.42 },
           { label: 'Tile and surfaces', weight: 0.22 },
@@ -96,26 +132,34 @@ export const rooms: Record<string, RoomDefinition> = {
           { label: 'Permits and misc', weight: 0.08 },
         ],
         tiers: {
-          budget: { low: 7000, high: 14000, perSqft: 70 },
-          midrange: { low: 14000, high: 28000, perSqft: 140 },
-          premium: { low: 28000, high: 52000, perSqft: 260 },
-          luxury: { low: 52000, high: 90000, perSqft: 450 },
+          budget: { low: 8000, high: 14000, perSqft: 120 },
+          midrange: { low: 14000, high: 26000, perSqft: 190 },
+          premium: { low: 26000, high: 45000, perSqft: 300 },
+          luxury: { low: 45000, high: 70000, perSqft: 450 },
         },
       },
       shower_upgrade: {
         label: 'Shower upgrade',
         roi: 'Typical resale recapture: 55% to 65%',
         summary: 'Replace or retile shower and update glass, valves, and hardware.',
+        scopeType: 'localized',
+        effectiveSqftRatio: 0.3,
+        effectiveSqftMin: 28,
+        effectiveSqftMax: 72,
+        referenceSqft: 48,
+        sizeMultiplierMin: 0.9,
+        sizeMultiplierMax: 1.14,
+        sizeElasticity: 0.14,
         breakdownWeights: [
           { label: 'Labor', weight: 0.46 },
           { label: 'Tile and waterproofing', weight: 0.3 },
           { label: 'Fixtures and glass', weight: 0.24 },
         ],
         tiers: {
-          budget: { low: 4500, high: 9000, perSqft: 52 },
-          midrange: { low: 9000, high: 17000, perSqft: 96 },
-          premium: { low: 17000, high: 30000, perSqft: 165 },
-          luxury: { low: 30000, high: 50000, perSqft: 275 },
+          budget: { low: 2000, high: 5000, perSqft: 55 },
+          midrange: { low: 5000, high: 9000, perSqft: 92 },
+          premium: { low: 9000, high: 15000, perSqft: 150 },
+          luxury: { low: 15000, high: 22000, perSqft: 220 },
         },
       },
     },
@@ -127,6 +171,11 @@ export const rooms: Record<string, RoomDefinition> = {
         label: 'Refresh and finish update',
         roi: 'Typical resale recapture: 60% to 75%',
         summary: 'Paint, trim, flooring, closet updates, and lighting changes.',
+        scopeType: 'room_wide',
+        referenceSqft: 160,
+        sizeMultiplierMin: 0.9,
+        sizeMultiplierMax: 1.2,
+        sizeElasticity: 0.14,
         breakdownWeights: [
           { label: 'Labor', weight: 0.34 },
           { label: 'Flooring', weight: 0.32 },
@@ -134,10 +183,10 @@ export const rooms: Record<string, RoomDefinition> = {
           { label: 'Lighting and misc', weight: 0.14 },
         ],
         tiers: {
-          budget: { low: 2500, high: 7000, perSqft: 18 },
-          midrange: { low: 7000, high: 14000, perSqft: 36 },
-          premium: { low: 14000, high: 24000, perSqft: 65 },
-          luxury: { low: 24000, high: 42000, perSqft: 110 },
+          budget: { low: 1500, high: 5000, perSqft: 12 },
+          midrange: { low: 5000, high: 10000, perSqft: 25 },
+          premium: { low: 10000, high: 18000, perSqft: 45 },
+          luxury: { low: 18000, high: 30000, perSqft: 75 },
         },
       },
     },
@@ -149,6 +198,11 @@ export const rooms: Record<string, RoomDefinition> = {
         label: 'Refresh and finish update',
         roi: 'Typical resale recapture: 55% to 70%',
         summary: 'Flooring, paint, trim, built-ins, and lighting improvements.',
+        scopeType: 'room_wide',
+        referenceSqft: 240,
+        sizeMultiplierMin: 0.9,
+        sizeMultiplierMax: 1.22,
+        sizeElasticity: 0.14,
         breakdownWeights: [
           { label: 'Labor', weight: 0.36 },
           { label: 'Flooring', weight: 0.31 },
@@ -156,10 +210,10 @@ export const rooms: Record<string, RoomDefinition> = {
           { label: 'Lighting and misc', weight: 0.14 },
         ],
         tiers: {
-          budget: { low: 3000, high: 8000, perSqft: 16 },
-          midrange: { low: 8000, high: 16000, perSqft: 34 },
-          premium: { low: 16000, high: 29000, perSqft: 62 },
-          luxury: { low: 29000, high: 50000, perSqft: 105 },
+          budget: { low: 2500, high: 7000, perSqft: 14 },
+          midrange: { low: 7000, high: 14000, perSqft: 28 },
+          premium: { low: 14000, high: 25000, perSqft: 50 },
+          luxury: { low: 25000, high: 40000, perSqft: 78 },
         },
       },
     },
@@ -171,6 +225,11 @@ export const rooms: Record<string, RoomDefinition> = {
         label: 'Basement finishing',
         roi: 'Typical resale recapture: 60% to 75%',
         summary: 'Insulation, framing, drywall, flooring, and lighting for livable space.',
+        scopeType: 'room_wide',
+        referenceSqft: 800,
+        sizeMultiplierMin: 0.94,
+        sizeMultiplierMax: 1.18,
+        sizeElasticity: 0.1,
         breakdownWeights: [
           { label: 'Labor', weight: 0.41 },
           { label: 'Framing and drywall', weight: 0.24 },
@@ -179,10 +238,10 @@ export const rooms: Record<string, RoomDefinition> = {
           { label: 'Permits and misc', weight: 0.08 },
         ],
         tiers: {
-          budget: { low: 12000, high: 28000, perSqft: 35 },
-          midrange: { low: 28000, high: 55000, perSqft: 68 },
-          premium: { low: 55000, high: 95000, perSqft: 118 },
-          luxury: { low: 95000, high: 160000, perSqft: 195 },
+          budget: { low: 12000, high: 24000, perSqft: 25 },
+          midrange: { low: 24000, high: 45000, perSqft: 50 },
+          premium: { low: 45000, high: 70000, perSqft: 80 },
+          luxury: { low: 70000, high: 120000, perSqft: 130 },
         },
       },
     },
@@ -194,6 +253,11 @@ export const rooms: Record<string, RoomDefinition> = {
         label: 'New build',
         roi: 'Typical resale recapture: 55% to 75%',
         summary: 'New outdoor living area with railing, steps, and finish options.',
+        scopeType: 'room_wide',
+        referenceSqft: 250,
+        sizeMultiplierMin: 0.92,
+        sizeMultiplierMax: 1.18,
+        sizeElasticity: 0.12,
         breakdownWeights: [
           { label: 'Labor', weight: 0.37 },
           { label: 'Materials', weight: 0.43 },
@@ -201,10 +265,10 @@ export const rooms: Record<string, RoomDefinition> = {
           { label: 'Permits and misc', weight: 0.08 },
         ],
         tiers: {
-          budget: { low: 6000, high: 15000, perSqft: 24 },
-          midrange: { low: 15000, high: 32000, perSqft: 52 },
-          premium: { low: 32000, high: 58000, perSqft: 92 },
-          luxury: { low: 58000, high: 95000, perSqft: 150 },
+          budget: { low: 7500, high: 15000, perSqft: 35 },
+          midrange: { low: 15000, high: 28000, perSqft: 60 },
+          premium: { low: 28000, high: 45000, perSqft: 95 },
+          luxury: { low: 45000, high: 70000, perSqft: 140 },
         },
       },
     },
@@ -216,6 +280,11 @@ export const rooms: Record<string, RoomDefinition> = {
         label: 'Whole home update',
         roi: 'Typical resale recapture: 50% to 70%',
         summary: 'Multi-room refresh including core systems, finishes, and staging-ready updates.',
+        scopeType: 'whole_home',
+        referenceSqft: 2200,
+        sizeMultiplierMin: 0.94,
+        sizeMultiplierMax: 1.14,
+        sizeElasticity: 0.08,
         breakdownWeights: [
           { label: 'Labor', weight: 0.4 },
           { label: 'Materials', weight: 0.31 },
@@ -223,10 +292,10 @@ export const rooms: Record<string, RoomDefinition> = {
           { label: 'Permits and misc', weight: 0.12 },
         ],
         tiers: {
-          budget: { low: 40000, high: 90000, perSqft: 42 },
-          midrange: { low: 90000, high: 180000, perSqft: 84 },
-          premium: { low: 180000, high: 320000, perSqft: 148 },
-          luxury: { low: 320000, high: 560000, perSqft: 255 },
+          budget: { low: 35000, high: 80000, perSqft: 30 },
+          midrange: { low: 80000, high: 160000, perSqft: 55 },
+          premium: { low: 160000, high: 300000, perSqft: 90 },
+          luxury: { low: 300000, high: 500000, perSqft: 150 },
         },
       },
     },
@@ -238,6 +307,7 @@ export interface RenovationInputs {
   projectKey: string
   tier: Tier
   squareFeet: number
+  projectAreaSquareFeet: number | null
 }
 
 export interface EstimateBreakdownRow {
@@ -254,8 +324,80 @@ export interface RenovationEstimate {
   high: number
   roi: string
   summary: string
+  scopeType: ScopeType
+  modeledSquareFeet: number
+  suggestedProjectAreaSquareFeet: number | null
+  projectAreaCustomized: boolean
+  roomSquareFeet: number
+  assumptionsNote: string
   adjustedPerSqftCost: number
   breakdown: EstimateBreakdownRow[]
+}
+
+export interface ProjectAreaBounds {
+  min: number
+  max: number
+  suggested: number
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value))
+}
+
+function getEffectiveSquareFeet(project: ProjectDefinition, roomSquareFeet: number) {
+  if (project.scopeType !== 'localized') {
+    return roomSquareFeet
+  }
+
+  const ratio = project.effectiveSqftRatio ?? 1
+  const scaled = roomSquareFeet * ratio
+  const min = project.effectiveSqftMin ?? scaled
+  const max = project.effectiveSqftMax ?? scaled
+  return clamp(scaled, min, max)
+}
+
+function getLocalizedProjectAreaBounds(project: ProjectDefinition, roomSquareFeet: number): ProjectAreaBounds | null {
+  if (project.scopeType !== 'localized') {
+    return null
+  }
+
+  const suggested = getEffectiveSquareFeet(project, roomSquareFeet)
+  const normalizedRoomSquareFeet = Math.max(1, Math.round(roomSquareFeet))
+  const min = 1
+  const max = normalizedRoomSquareFeet
+
+  return {
+    min,
+    max,
+    suggested: clamp(Math.round(suggested), min, max),
+  }
+}
+
+function getSizeMultiplier(project: ProjectDefinition, effectiveSquareFeet: number) {
+  const normalized = Math.max(0.25, effectiveSquareFeet / project.referenceSqft)
+  const unbounded = Math.pow(normalized, project.sizeElasticity)
+  return clamp(unbounded, project.sizeMultiplierMin, project.sizeMultiplierMax)
+}
+
+function getAssumptionsNote(
+  project: ProjectDefinition,
+  roomSquareFeet: number,
+  modeledSquareFeet: number,
+  projectAreaCustomized: boolean,
+) {
+  if (project.scopeType === 'localized') {
+    if (projectAreaCustomized) {
+      return `Entered square footage is treated as room size. This estimate prices your specified ${Math.round(modeledSquareFeet)} sq ft project area within the ${Math.round(roomSquareFeet)} sq ft room.`
+    }
+
+    return `Entered square footage is treated as room size. This estimate prices about ${Math.round(modeledSquareFeet)} sq ft of affected project area, not the full ${Math.round(roomSquareFeet)} sq ft room.`
+  }
+
+  if (project.scopeType === 'whole_home') {
+    return 'Whole-home projects use a blended cost curve so estimates scale with total home size without assuming every square foot is renovated equally.'
+  }
+
+  return 'This estimate treats the entered square footage as the primary project area with a mild size adjustment for complexity and economies of scale.'
 }
 
 const tierLabels: Record<Tier, string> = {
@@ -279,6 +421,16 @@ export function getProjectOptions(roomKey: string) {
   return Object.entries(room.projects).map(([value, project]) => ({ value, label: project.label }))
 }
 
+export function getProjectAreaBounds(roomKey: string, projectKey: string, roomSquareFeet: number): ProjectAreaBounds | null {
+  const room = rooms[roomKey]
+  if (!room) return null
+
+  const project = room.projects[projectKey]
+  if (!project) return null
+
+  return getLocalizedProjectAreaBounds(project, roomSquareFeet)
+}
+
 export function getDefaultProjectKey(roomKey: string): string {
   const options = getProjectOptions(roomKey)
   return options.length ? options[0].value : ''
@@ -292,11 +444,17 @@ export function calculateRenovationEstimate(inputs: RenovationInputs): Renovatio
   if (!project) return null
 
   const tier = project.tiers[inputs.tier]
-  const sizeFactor = Math.max(0.65, Math.min(1.75, inputs.squareFeet / 200))
-  const sizeAdjustedPerSqft = tier.perSqft * sizeFactor
+  const projectAreaBounds = getLocalizedProjectAreaBounds(project, inputs.squareFeet)
+  const projectAreaCustomized = projectAreaBounds !== null && inputs.projectAreaSquareFeet !== null
+  const modeledSquareFeet =
+    projectAreaBounds && inputs.projectAreaSquareFeet !== null
+      ? clamp(inputs.projectAreaSquareFeet, projectAreaBounds.min, projectAreaBounds.max)
+      : getEffectiveSquareFeet(project, inputs.squareFeet)
+  const sizeMultiplier = getSizeMultiplier(project, modeledSquareFeet)
+  const sizeAdjustedPerSqft = tier.perSqft * sizeMultiplier
 
-  const floorBySqft = Math.round(inputs.squareFeet * sizeAdjustedPerSqft * 0.72)
-  const ceilingBySqft = Math.round(inputs.squareFeet * sizeAdjustedPerSqft * 1.24)
+  const floorBySqft = Math.round(modeledSquareFeet * sizeAdjustedPerSqft * 0.9)
+  const ceilingBySqft = Math.round(modeledSquareFeet * sizeAdjustedPerSqft * 1.18)
 
   const low = Math.max(tier.low, floorBySqft)
   const high = Math.max(low + 500, Math.max(tier.high, ceilingBySqft))
@@ -315,6 +473,12 @@ export function calculateRenovationEstimate(inputs: RenovationInputs): Renovatio
     high,
     roi: project.roi,
     summary: project.summary,
+    scopeType: project.scopeType,
+    modeledSquareFeet: Math.round(modeledSquareFeet),
+    suggestedProjectAreaSquareFeet: projectAreaBounds?.suggested ?? null,
+    projectAreaCustomized,
+    roomSquareFeet: inputs.squareFeet,
+    assumptionsNote: getAssumptionsNote(project, inputs.squareFeet, modeledSquareFeet, projectAreaCustomized),
     adjustedPerSqftCost: Math.round(sizeAdjustedPerSqft),
     breakdown,
   }

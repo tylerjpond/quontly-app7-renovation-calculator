@@ -6,7 +6,6 @@
   import ResultCard from '$lib/components/ResultCard.svelte'
   import SectionHeading from '$lib/components/SectionHeading.svelte'
   import HeroSection from '$lib/components/HeroSection.svelte'
-  import QuickSnapshotCard from '$lib/components/QuickSnapshotCard.svelte'
   import RecommendationsSection from '$lib/components/RecommendationsSection.svelte'
   import GuideSection from '$lib/components/GuideSection.svelte'
   import InputRange from '$lib/components/elements/InputRange.svelte'
@@ -14,9 +13,9 @@
   import {
     calculateRenovationEstimate,
     getDefaultProjectKey,
+    getProjectAreaBounds,
     getProjectOptions,
     getRoomOptions,
-    getTierLabel,
     type RenovationInputs,
     type Tier,
   } from '$lib/renovation'
@@ -26,6 +25,11 @@
     projectKey: z.string().min(1, 'Please select a project type.'),
     tier: z.union([z.literal('budget'), z.literal('midrange'), z.literal('premium'), z.literal('luxury')]),
     squareFeet: z.number().min(40, 'Square footage must be at least 40.').max(8000, 'Square footage must be 8,000 or below.'),
+    projectAreaSquareFeet: z
+      .number()
+      .min(1, 'Project area must be at least 1 sq ft.')
+      .max(8000, 'Project area must be 8,000 or below.')
+      .nullable(),
   })
 
   type FieldErrors = Partial<Record<keyof RenovationInputs, string>>
@@ -52,11 +56,17 @@
     projectKey: getDefaultProjectKey(defaultRoomKey),
     tier: 'midrange',
     squareFeet: 200,
+    projectAreaSquareFeet: null,
   }
 
   const roomOptions = getRoomOptions()
 
   $: projectOptions = getProjectOptions(inputs.roomKey)
+  $: projectAreaBounds = getProjectAreaBounds(inputs.roomKey, inputs.projectKey, inputs.squareFeet)
+  $: projectAreaStep = 1
+  $: activeProjectAreaSquareFeet = projectAreaBounds
+    ? inputs.projectAreaSquareFeet ?? projectAreaBounds.suggested
+    : null
   $: validation = inputSchema.safeParse(inputs)
   $: fieldErrors = collectErrors(validation.success ? null : validation.error)
   $: estimate = validation.success ? calculateRenovationEstimate(inputs) : null
@@ -77,9 +87,29 @@
   }
 
   function setSquareFeet(value: number) {
+    const nextSquareFeet = Number.isFinite(value) ? value : inputs.squareFeet
+    const nextProjectAreaBounds = getProjectAreaBounds(inputs.roomKey, inputs.projectKey, nextSquareFeet)
+    const nextProjectAreaSquareFeet =
+      nextProjectAreaBounds && inputs.projectAreaSquareFeet !== null
+        ? Math.min(nextProjectAreaBounds.max, Math.max(nextProjectAreaBounds.min, inputs.projectAreaSquareFeet))
+        : null
+
     inputs = {
       ...inputs,
-      squareFeet: Number.isFinite(value) ? value : inputs.squareFeet,
+      squareFeet: nextSquareFeet,
+      projectAreaSquareFeet: nextProjectAreaSquareFeet,
+    }
+  }
+
+  function setProjectAreaSquareFeet(value: number) {
+    if (!projectAreaBounds || !Number.isFinite(value)) {
+      return
+    }
+
+    const next = Math.min(projectAreaBounds.max, Math.max(projectAreaBounds.min, Math.round(value)))
+    inputs = {
+      ...inputs,
+      projectAreaSquareFeet: next,
     }
   }
 
@@ -91,27 +121,30 @@
     setSquareFeet(next)
   }
 
+  function nudgeProjectAreaSquareFeet(direction: -1 | 1) {
+    if (activeProjectAreaSquareFeet === null || !projectAreaBounds) {
+      return
+    }
+
+    const next = activeProjectAreaSquareFeet + direction * projectAreaStep
+    setProjectAreaSquareFeet(next)
+  }
+
   function selectRoom(roomKey: string) {
     inputs = {
       ...inputs,
       roomKey,
       projectKey: getDefaultProjectKey(roomKey),
+      projectAreaSquareFeet: null,
     }
   }
 
-  async function saveEstimateSummary() {
-    if (!estimate) return
-
-    const summary = [
-      `${estimate.roomLabel} - ${estimate.projectLabel}`,
-      `${estimate.tierLabel} quality`,
-      `Size: ${wholeNumber.format(inputs.squareFeet)} sq ft`,
-      `Estimated range: ${currency.format(estimate.low)} to ${currency.format(estimate.high)}`,
-      `Cost intensity: ${currency.format(estimate.adjustedPerSqftCost)} / sq ft`,
-      `ROI: ${estimate.roi}`,
-    ].join('\n')
-
-    await navigator.clipboard.writeText(summary)
+  function selectProject(projectKey: string) {
+    inputs = {
+      ...inputs,
+      projectKey,
+      projectAreaSquareFeet: null,
+    }
   }
 </script>
 
@@ -172,7 +205,8 @@
                 </div>
                 <select
                   class="select select-bordered w-full bg-base-100"
-                  bind:value={inputs.projectKey}
+                  value={inputs.projectKey}
+                  on:change={(event) => selectProject((event.currentTarget as HTMLSelectElement).value)}
                 >
                   {#each projectOptions as option (option.value)}
                     <option value={option.value}>{option.label}</option>
@@ -188,7 +222,7 @@
           <ControlPanel
             eyebrow="Step 2"
             title="Set quality and size"
-            description="Choose your finish level and enter square footage to customize the estimated range."
+            description="Choose your finish level and enter room square footage to customize the estimated range."
           >
             <ChoiceField
               label="Quality tier"
@@ -201,7 +235,7 @@
 
             <div class="space-y-3">
               <div class="flex items-center justify-between gap-3">
-                <span class="label-text font-semibold text-base-content">Square footage</span>
+                <span class="label-text font-semibold text-base-content">Room square footage</span>
                 <span class="text-xs text-base-content/60">{wholeNumber.format(inputs.squareFeet)} sq ft</span>
               </div>
               <InputRange min={40} max={8000} step={10} value={inputs.squareFeet} onChange={setSquareFeet} />
@@ -216,22 +250,66 @@
                 onStepperDownClick={() => nudgeSquareFeet(-1)}
                 onStepperUpClick={() => nudgeSquareFeet(1)}
               />
+              <p class="text-xs leading-5 text-base-content/65">
+                Enter the room size. Partial projects like shower or countertop upgrades use a modeled affected area rather than pricing the entire room footprint.
+              </p>
               {#if fieldErrors.squareFeet}
                 <p class="text-xs text-error">{fieldErrors.squareFeet}</p>
               {/if}
             </div>
+
+            {#if projectAreaBounds && activeProjectAreaSquareFeet !== null}
+              <div class="space-y-3">
+                <div class="flex items-center justify-between gap-3">
+                  <span class="label-text font-semibold text-base-content">Project area within the room</span>
+                  <span class="text-xs text-base-content/60">{wholeNumber.format(activeProjectAreaSquareFeet)} sq ft</span>
+                </div>
+                <InputRange
+                  min={projectAreaBounds.min}
+                  max={projectAreaBounds.max}
+                  step={projectAreaStep}
+                  value={activeProjectAreaSquareFeet}
+                  onChange={setProjectAreaSquareFeet}
+                />
+                <InputNumberWithSteppers
+                  classes="text-center"
+                  min={projectAreaBounds.min}
+                  max={projectAreaBounds.max}
+                  step={projectAreaStep}
+                  value={activeProjectAreaSquareFeet}
+                  endLabel="sq ft"
+                  onInputChange={setProjectAreaSquareFeet}
+                  onStepperDownClick={() => nudgeProjectAreaSquareFeet(-1)}
+                  onStepperUpClick={() => nudgeProjectAreaSquareFeet(1)}
+                />
+                <p class="text-xs leading-5 text-base-content/65">
+                  Suggested default: {wholeNumber.format(projectAreaBounds.suggested)} sq ft based on the selected project type. You can adjust this to any area from 1 sq ft up to the full room size.
+                </p>
+              </div>
+            {/if}
           </ControlPanel>
         </div>
 
         <div class="w-full space-y-6 xl:sticky xl:top-24 xl:basis-[44%] xl:self-start">
           <div class="flex flex-col gap-2">
-            
             <ResultCard
               tone="primary"
               label="Estimated cost range"
               value={estimate ? `${currency.format(estimate.low)} - ${currency.format(estimate.high)}` : '$0 - $0'}
               detail={estimate ? `${estimate.roomLabel} · ${estimate.projectLabel}` : 'Select room and project'}
             />
+
+            {#if estimate?.scopeType === 'localized'}
+              <div class="alert border border-info/20 bg-info/8 px-4 py-3 text-sm text-base-content/80">
+                <span>
+                  {#if estimate.projectAreaCustomized}
+                    This quote uses your specified {wholeNumber.format(estimate.modeledSquareFeet)} sq ft project area within the {wholeNumber.format(inputs.squareFeet)} sq ft room.
+                  {:else}
+                    This quote uses the suggested {wholeNumber.format(estimate.modeledSquareFeet)} sq ft project area from your {wholeNumber.format(inputs.squareFeet)} sq ft room size.
+                  {/if}
+                </span>
+              </div>
+            {/if}
 
             <div class="flex gap-2">
               <div class="w-full">
@@ -253,18 +331,22 @@
             <ResultCard
               label="Scope"
               value={estimate ? estimate.summary : 'Select options'}
-              detail={`${wholeNumber.format(inputs.squareFeet)} sq ft`}
+              detail={
+                estimate
+                  ? `${wholeNumber.format(estimate.modeledSquareFeet)} modeled sq ft from ${wholeNumber.format(inputs.squareFeet)} room sq ft`
+                  : `${wholeNumber.format(inputs.squareFeet)} sq ft`
+              }
               valueClassName="text-[clamp(1rem,1.8vw,1.45rem)] leading-snug"
             />
-
           </div>
 
           {#if estimate}
             <div class="rounded-box border border-base-300 bg-base-100/90 p-4 text-sm leading-6 text-base-content/75">
               <p class="font-semibold text-base-content">Budget interpretation</p>
               <p>
-                A {estimate.tierLabel.toLowerCase()} {estimate.projectLabel.toLowerCase()} in a {estimate.roomLabel.toLowerCase()} of {wholeNumber.format(inputs.squareFeet)} sq ft typically lands between {currency.format(estimate.low)} and {currency.format(estimate.high)}. Add a 10% to 20% contingency for unknowns such as permit updates, hidden repairs, or timeline changes.
+                A {estimate.tierLabel.toLowerCase()} {estimate.projectLabel.toLowerCase()} in a {estimate.roomLabel.toLowerCase()} with {wholeNumber.format(inputs.squareFeet)} room sq ft typically lands between {currency.format(estimate.low)} and {currency.format(estimate.high)}. Add a 10% to 20% contingency for unknowns such as permit updates, hidden repairs, or timeline changes.
               </p>
+              <p class="mt-2">{estimate.assumptionsNote}</p>
             </div>
           {/if}
 
@@ -296,6 +378,5 @@
     </section>
 
     <GuideSection {explainerSections} {faqs} />
-
   </section>
 </main>
